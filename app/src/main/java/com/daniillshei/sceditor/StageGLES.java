@@ -1,6 +1,5 @@
 package com.daniillshei.sceditor;
 
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 
@@ -164,6 +163,10 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
         this.updatePMVMatrix();
 
         this.renderer.bindBlendMode(BlendMode.PREMULTIPLIED_ALPHA);
+
+        for (var texture : this.textures.values()) {
+            texture.uploadToGL.run();
+        }
 
         this.initialized = true;
     }
@@ -585,7 +588,9 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        initialized = false;
+        if (initialized) {
+            unbindRender();
+        }
     }
 
     @Override
@@ -595,8 +600,6 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        // Set the viewport
-        GLES20.glViewport(0, 0, width, height);
         if (!initialized) {
 //            GLES2RendererContext rendererContext = new GLES2RendererContext();
             GLES3RendererContext rendererContext = new GLES3RendererContext();

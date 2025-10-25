@@ -76,11 +76,7 @@ public class CameraZoom {
         setPointSize(scale / 100f);
     }
 
-    public void zoomIn(int step) {
-        this.zoomTo(this.scaleStep + step);
-    }
-
-    public void zoomOut(int step) {
-        this.zoomTo(this.scaleStep - step);
+    public void zoomTo(float scale) {
+        setPointSize(pointSize * scale);
     }
 }

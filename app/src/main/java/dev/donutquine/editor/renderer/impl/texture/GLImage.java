@@ -21,6 +21,8 @@ import team.nulls.ntengine.assets.KhronosTexture;
 public final class GLImage {
     public static KhronosTextureLoader khronosTextureLoader;
 
+    public Runnable glTask;
+
     private GLImage() {
     }
 
@@ -56,7 +58,7 @@ public final class GLImage {
         GLTexture texture = new GLTexture(stage.getGlContext(), width, height);
         texture.setPixelInfo(pixelFormat, pixelType);
 
-        stage.doInRenderThread(() -> {
+        texture.uploadToGL = () -> {
             texture.bindContext();
             texture.bind();
 
@@ -75,7 +77,8 @@ public final class GLImage {
             }
 
             texture.unbind();
-        });
+        };
+        stage.doInRenderThread(texture.uploadToGL);
 
         return texture;
     }

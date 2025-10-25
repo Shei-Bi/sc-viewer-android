@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.view.MenuItem;
@@ -49,7 +48,7 @@ import dev.donutquine.swf.textures.SWFTexture;
 
 public class MainActivity extends Activity {
 
-    private GLSurfaceView glView;
+    private MyGLSurfaceView glView;
     public SupercellSWF swf;
     public TextView title_txt;
     public String filename;
@@ -85,10 +84,10 @@ public class MainActivity extends Activity {
         });
 
 
+        ImageButton settings_button = findViewById(R.id.settings_button);
+        settings_button.setOnClickListener(this::showPopupMenu);
+
         glView = findViewById(R.id.glView);
-//        System.loadLibrary("VkLayer_GLES_RenderDoc");
-        glView.setEGLContextClientVersion(3); // Use OpenGL ES 3.0
-        glView.setRenderer(StageGLES.getInstance());
 
         loading_bar = findViewById(R.id.loading_bar);
         loading_txt = findViewById(R.id.loading_txt);
@@ -104,7 +103,9 @@ public class MainActivity extends Activity {
             switchToMenuTable(0);
         });
         menu_info_button = findViewById(R.id.menu_info_button);
-        menu_info_button.setOnClickListener(this::showPopupMenu);
+        menu_info_button.setOnClickListener(v -> {
+            switchToMenuTable(2);
+        });
         menu_texture_button = findViewById(R.id.menu_texture_button);
         menu_texture_button.setOnClickListener(v -> {
             switchToMenuTable(1);
@@ -128,14 +129,14 @@ public class MainActivity extends Activity {
         CustomTable texturesTable = getTexturesTable();
         texturesTable.removeAllViews();
         texturesTable.setColumnsWidth(new float[]{0.1F, 0.3F, 0.3F, 0.3F}, tableContainer.getWidth());
-        texturesTable.setHeader(new String[]{"id", "width", "height", "format"});
+        texturesTable.setHeader(new String[]{"Id", "Width", "Height", "Format"});
 
         CustomTable infoTable = getInfoTable();
         infoTable.removeAllViews();
-        infoTable.setColumnsWidth(new float[]{0.1F, 0.4F, 0.4F, 0.1F}, tableContainer.getWidth());
-        infoTable.setHeader(new String[]{"id", "width", "height", "format"});
+        infoTable.setColumnsWidth(new float[]{0.3F, 0.6F}, tableContainer.getWidth());
+        infoTable.setHeader(new String[]{"", "Click + to open a sc file!"});
 
-        switchToMenuTable(0);
+        switchToMenuTable(2);
         setTableMaxHeight(dpToPx(300));
     }
 
@@ -196,6 +197,7 @@ public class MainActivity extends Activity {
 
         StageGLES stage = StageGLES.getInstance();
         stage.doInRenderThread(() -> {
+            stage.getCamera().reset();
             stage.clearBatches();
             stage.removeAllChildren();
             stage.addChild(displayObject);
@@ -504,6 +506,7 @@ public class MainActivity extends Activity {
                 getTexturesTable().addRow(finalI, texture.getWidth(), texture.getHeight(), texture.getFormat()).setOnClickListener(v -> {
                     StageGLES stage = StageGLES.getInstance();
                     stage.doInRenderThread(() -> {
+                        stage.getCamera().reset();
                         stage.clearBatches();
                         stage.removeAllChildren();
                         stage.addChild(this.spriteSheets.get(finalI));

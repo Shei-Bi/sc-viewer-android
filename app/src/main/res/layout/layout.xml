@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.opengl.GLSurfaceView
+    <com.daniillshei.sceditor.MyGLSurfaceView
         android:id="@+id/glView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

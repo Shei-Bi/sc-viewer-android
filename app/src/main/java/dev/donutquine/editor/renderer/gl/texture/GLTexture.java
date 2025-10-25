@@ -1,13 +1,13 @@
 package dev.donutquine.editor.renderer.gl.texture;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+
 import dev.donutquine.editor.renderer.gl.GLConstants;
 import dev.donutquine.editor.renderer.gl.GLRendererContext;
 import dev.donutquine.editor.renderer.texture.RenderableTexture;
 import dev.donutquine.utilities.BufferUtils;
-
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 public class GLTexture implements RenderableTexture {
     private final GLRendererContext gl;
@@ -17,6 +17,7 @@ public class GLTexture implements RenderableTexture {
 
     private int internalFormat, format;
     private int pixelType;
+    public Runnable uploadToGL;
 
     public GLTexture(GLRendererContext gl, int width, int height) {
         this.gl = gl;
@@ -143,7 +144,7 @@ public class GLTexture implements RenderableTexture {
             case GLConstants.GL_LUMINANCE_ALPHA, GLConstants.GL_RG -> 2;
             case GLConstants.GL_LUMINANCE, GLConstants.GL_RED -> 1;
             default ->
-                throw new IllegalArgumentException("Unsupported pixel format for pixel storage, pixel format: " + format);
+                    throw new IllegalArgumentException("Unsupported pixel format for pixel storage, pixel format: " + format);
         };
     }
 
@@ -154,8 +155,7 @@ public class GLTexture implements RenderableTexture {
                  GLConstants.GL_UNSIGNED_SHORT_5_5_5_1,
                  GLConstants.GL_UNSIGNED_SHORT_5_6_5 -> 2;
             case GLConstants.GL_UNSIGNED_INT, GLConstants.GL_UNSIGNED_INT_24_8 -> 4;
-            default ->
-                throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
+            default -> throw new IllegalArgumentException("Unsupported pixel type: " + pixelType);
         };
     }
 
