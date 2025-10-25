@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
 
 
         ImageButton settings_button = findViewById(R.id.settings_button);
-        settings_button.setOnClickListener(this::showPopupMenu);
+//        settings_button.setOnClickListener(this::showPopupMenu);
 
         glView = findViewById(R.id.glView);
 
@@ -198,6 +198,7 @@ public class MainActivity extends Activity {
         StageGLES stage = StageGLES.getInstance();
         stage.doInRenderThread(() -> {
             stage.getCamera().reset();
+            stage.updatePMVMatrix();
             stage.clearBatches();
             stage.removeAllChildren();
             stage.addChild(displayObject);
@@ -507,6 +508,7 @@ public class MainActivity extends Activity {
                     StageGLES stage = StageGLES.getInstance();
                     stage.doInRenderThread(() -> {
                         stage.getCamera().reset();
+                        stage.updatePMVMatrix();
                         stage.clearBatches();
                         stage.removeAllChildren();
                         stage.addChild(this.spriteSheets.get(finalI));
