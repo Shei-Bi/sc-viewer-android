@@ -1,0 +1,37 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.daniillshei.sceditor'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.daniillshei.sceditor"
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-simple:2.0.17'
+    implementation("com.github.luben:zstd-jni:1.5.7-4@aar")
+    implementation files('libs/sc-file-1.0.3.jar')
+    implementation files('libs/supercell-swf-1.1.4.jar')
+    implementation files('libs/supercell-texture-1.0.0.jar')
+//    implementation 'dev.donutquine:supercell-swf:1.1.4'
+    implementation 'com.google.flatbuffers:flatbuffers-java:25.2.10'
+}
