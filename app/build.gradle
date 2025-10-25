@@ -25,7 +25,13 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
-
+//task filteredJar(type: Jar) {
+//    from zipTree('libs/supercell-texture-1.0.0.jar')
+//    exclude 'com/example/conflicting/**'   // Exclude a whole package
+//    exclude 'com/example/Duplicate.class'  // Or a single class
+//    archiveFileName = 'yourlib_filtered.jar'
+//    destinationDirectory = file("$buildDir/filtered-libs")
+//}
 dependencies {
     implementation 'org.slf4j:slf4j-simple:2.0.17'
     implementation("com.github.luben:zstd-jni:1.5.7-4@aar")

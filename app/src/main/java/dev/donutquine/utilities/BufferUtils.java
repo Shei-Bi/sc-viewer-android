@@ -1,6 +1,10 @@
 package dev.donutquine.utilities;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 public final class BufferUtils {
     public static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
@@ -30,6 +34,7 @@ public final class BufferUtils {
         ByteBuffer byteBuffer = allocateDirect(shorts.length * Short.BYTES);
         ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
         shortBuffer.put(shorts);
+        shortBuffer.position(0);
         return shortBuffer;
     }
 
@@ -37,6 +42,7 @@ public final class BufferUtils {
         ByteBuffer byteBuffer = allocateDirect(ints.length * Integer.BYTES);
         IntBuffer intBuffer = byteBuffer.asIntBuffer();
         intBuffer.put(ints);
+        intBuffer.position(0);
         return intBuffer;
     }
 
@@ -44,6 +50,7 @@ public final class BufferUtils {
         ByteBuffer byteBuffer = allocateDirect(floats.length * Float.BYTES);
         FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
         floatBuffer.put(floats);
+        floatBuffer.position(0);
         return floatBuffer;
     }
 

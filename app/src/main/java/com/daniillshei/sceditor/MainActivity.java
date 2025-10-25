@@ -34,6 +34,7 @@ import java.util.List;
 
 import dev.donutquine.editor.displayObjects.SpriteSheet;
 import dev.donutquine.editor.renderer.gl.texture.GLTexture;
+import dev.donutquine.editor.renderer.texture.Texture;
 import dev.donutquine.renderer.impl.swf.objects.DisplayObject;
 import dev.donutquine.renderer.impl.swf.objects.DisplayObjectFactory;
 import dev.donutquine.resources.ResourceManager;
@@ -59,7 +60,7 @@ public class MainActivity extends Activity {
     private int currentMenuTableIndex;
     private LinearLayout tableContainer;
     private ScrollView scrollArea;
-    private ArrayList<SpriteSheet> spriteSheets;
+    private final ArrayList<SpriteSheet> spriteSheets = new ArrayList<>();
     private Button menu_object_button;
     private Button menu_texture_button;
     private Button menu_info_button;
@@ -85,7 +86,7 @@ public class MainActivity extends Activity {
 
 
         glView = findViewById(R.id.glView);
-        System.loadLibrary("VkLayer_GLES_RenderDoc");
+//        System.loadLibrary("VkLayer_GLES_RenderDoc");
         glView.setEGLContextClientVersion(3); // Use OpenGL ES 3.0
         glView.setRenderer(StageGLES.getInstance());
 
@@ -103,9 +104,7 @@ public class MainActivity extends Activity {
             switchToMenuTable(0);
         });
         menu_info_button = findViewById(R.id.menu_info_button);
-        menu_info_button.setOnClickListener(v -> {
-            testOpenAssetSc("loading.sc");
-        });
+        menu_info_button.setOnClickListener(this::showPopupMenu);
         menu_texture_button = findViewById(R.id.menu_texture_button);
         menu_texture_button.setOnClickListener(v -> {
             switchToMenuTable(1);
@@ -224,20 +223,20 @@ public class MainActivity extends Activity {
 
     private void showPopupMenu(View anchor) {
         PopupMenu popup = new PopupMenu(this, anchor);
-        popup.getMenu().add(0, 1, 0, "Settings");
-        popup.getMenu().add(0, 2, 1, "About");
-        popup.getMenu().add(0, 3, 2, "Exit");
+        popup.getMenu().add(0, 1, 0, "events.sc");
+        popup.getMenu().add(0, 2, 1, "background_chinaghost.sc");
+        popup.getMenu().add(0, 3, 2, "loading.sc");
 
         popup.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case 1:
-                    Toast.makeText(this, "Settings selected", Toast.LENGTH_SHORT).show();
+                    testOpenAssetSc("events.sc");
                     return true;
                 case 2:
-                    Toast.makeText(this, "About selected", Toast.LENGTH_SHORT).show();
+                    testOpenAssetSc("background_chinaghost.sc");
                     return true;
                 case 3:
-                    finish();
+                    testOpenAssetSc("loading.sc");
                     return true;
             }
             return false;
@@ -383,6 +382,33 @@ public class MainActivity extends Activity {
 //        fileMenu.checkCanSave();
     }
 
+    public void closeFile() {
+        this.filename = null;
+
+        this.spriteSheets.clear();
+
+        StageGLES stage = StageGLES.getInstance();
+
+        int textureCount = stage.getTextureCount();
+        if (textureCount > 0) {
+            int[] textureIds = new int[textureCount];
+            for (int i = 0; i < textureCount; i++) {
+                Texture texture = stage.getTextureByIndex(i);
+                if (texture == null) continue;
+
+                textureIds[i] = texture.getId();
+            }
+
+            stage.doInRenderThread(() -> stage.getGlContext().glDeleteTextures(textureIds.length, textureIds, 0));
+        }
+        stage.doInRenderThread(() -> {
+            stage.clearBatches();
+            stage.removeAllChildren();
+        });
+        this.swf = null;
+//        this.sctxTexture = null;
+    }
+
     private void updateObjectTable() {
         List<Object[]> rowDataList = collectObjectTableRows();
 
@@ -475,7 +501,14 @@ public class MainActivity extends Activity {
             int finalI = i;
             runOnUiThread(() -> {
                 updateLoadingProgress(finalI + 1);
-                getTexturesTable().addRow(finalI, texture.getWidth(), texture.getHeight(), texture.getFormat());
+                getTexturesTable().addRow(finalI, texture.getWidth(), texture.getHeight(), texture.getFormat()).setOnClickListener(v -> {
+                    StageGLES stage = StageGLES.getInstance();
+                    stage.doInRenderThread(() -> {
+                        stage.clearBatches();
+                        stage.removeAllChildren();
+                        stage.addChild(this.spriteSheets.get(finalI));
+                    });
+                });
             });
         }
     }
@@ -548,7 +581,7 @@ public class MainActivity extends Activity {
     private boolean loadSc(byte[] data, String filename) {
         try {
             if (!loadingExtraFiles) {
-                spriteSheets = new ArrayList<>();
+                closeFile();
                 this.swf = new SupercellSWF();
                 this.swf.loadInternalMemory(filename, data, false, false);
                 if (this.swf.isUseExternalTexture()) {

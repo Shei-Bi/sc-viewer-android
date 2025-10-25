@@ -1,9 +1,7 @@
 package com.daniillshei.sceditor;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-
 import android.opengl.Matrix;
 
 import com.vorono4ka.sctx.FlatSctxTextureLoader;
@@ -13,19 +11,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import dev.donutquine.editor.renderer.*;
-import dev.donutquine.editor.renderer.gl.*;
+import dev.donutquine.editor.renderer.Batch;
+import dev.donutquine.editor.renderer.BatchPool;
+import dev.donutquine.editor.renderer.BlendMode;
+import dev.donutquine.editor.renderer.Camera;
+import dev.donutquine.editor.renderer.Framebuffer;
+import dev.donutquine.editor.renderer.RenderStencilState;
+import dev.donutquine.editor.renderer.Renderer;
+import dev.donutquine.editor.renderer.Stage;
+import dev.donutquine.editor.renderer.VertexBuffer;
+import dev.donutquine.editor.renderer.gl.GLConstants;
+import dev.donutquine.editor.renderer.gl.GLFramebuffer;
+import dev.donutquine.editor.renderer.gl.GLRenderer;
+import dev.donutquine.editor.renderer.gl.GLRendererContext;
+import dev.donutquine.editor.renderer.gl.GLVertexBuffer;
 import dev.donutquine.editor.renderer.gl.exceptions.ShaderCompilationException;
+import dev.donutquine.editor.renderer.gl.texture.GLTexture;
 import dev.donutquine.editor.renderer.impl.gl.GLShaderLoader;
 import dev.donutquine.editor.renderer.impl.texture.GLImage;
 import dev.donutquine.editor.renderer.impl.texture.ImageFilter;
@@ -35,17 +49,18 @@ import dev.donutquine.editor.renderer.impl.texture.sctx.SctxPixelType;
 import dev.donutquine.editor.renderer.shader.Attribute;
 import dev.donutquine.editor.renderer.shader.Shader;
 import dev.donutquine.editor.renderer.texture.RenderableTexture;
-import dev.donutquine.math.*;
-import dev.donutquine.renderer.impl.swf.objects.*;
+import dev.donutquine.math.ReadonlyRect;
+import dev.donutquine.math.Rect;
+import dev.donutquine.renderer.impl.swf.objects.DisplayObject;
+import dev.donutquine.renderer.impl.swf.objects.MovieClip;
+import dev.donutquine.renderer.impl.swf.objects.StageSprite;
 import dev.donutquine.resources.AssetManager;
-import dev.donutquine.swf.*;
-import dev.donutquine.swf.exceptions.TextureFileNotFound;
-import dev.donutquine.swf.file.compression.Zstandard;
+import dev.donutquine.swf.ColorTransform;
+import dev.donutquine.swf.Matrix2x3;
 import dev.donutquine.swf.movieclips.MovieClipState;
 import dev.donutquine.swf.textures.SWFTexture;
 import dev.donutquine.utilities.BufferUtils;
 import dev.donutquine.utilities.MovieClipHelper;
-import dev.donutquine.editor.renderer.gl.texture.GLTexture;
 
 public class StageGLES implements GLSurfaceView.Renderer, Stage {
     private static final Logger LOGGER = LoggerFactory.getLogger(StageGLES.class);
@@ -117,19 +132,19 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
 
     public void init(int x, int y, int width, int height) throws ShaderCompilationException {
         this.shader = assetManager.getShader(
-            "objects.vertex.glsl",
-            "objects.fragment.glsl",
-            new Attribute(0, 2, Float.BYTES, GLConstants.GL_FLOAT),
-            new Attribute(1, 2, Float.BYTES, GLConstants.GL_FLOAT),
-            new Attribute(2, 4, Float.BYTES, GLConstants.GL_FLOAT),
-            new Attribute(3, 3, Float.BYTES, GLConstants.GL_FLOAT)
+                "objects.vertex.glsl",
+                "objects.fragment.glsl",
+                new Attribute(0, 2, Float.BYTES, GLConstants.GL_FLOAT),
+                new Attribute(1, 2, Float.BYTES, GLConstants.GL_FLOAT),
+                new Attribute(2, 4, Float.BYTES, GLConstants.GL_FLOAT),
+                new Attribute(3, 3, Float.BYTES, GLConstants.GL_FLOAT)
         );
 
         this.screenShader = assetManager.getShader(
-            "screen.vertex.glsl",
-            "screen.fragment.glsl",
-            new Attribute(0, 2, Float.BYTES, GLConstants.GL_FLOAT),
-            new Attribute(1, 2, Float.BYTES, GLConstants.GL_FLOAT)
+                "screen.vertex.glsl",
+                "screen.fragment.glsl",
+                new Attribute(0, 2, Float.BYTES, GLConstants.GL_FLOAT),
+                new Attribute(1, 2, Float.BYTES, GLConstants.GL_FLOAT)
         );
 
 //        Bitmap imageBuffer = assetManager.getImageBuffer("gradient_texture.png");
@@ -450,14 +465,14 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
             }
         }
 
-        GLTexture image = GLImage.createWithFormat(texture.getWidth(), texture.getHeight(), true, ImageFilter.values()[texture.getInitialTag().getTextureFilter()], texture.getType().glFormat, texture.getType().glType, null, sctxTexture, ktxData,this);
+        GLTexture image = GLImage.createWithFormat(texture.getWidth(), texture.getHeight(), true, ImageFilter.values()[texture.getInitialTag().getTextureFilter()], texture.getType().glFormat, texture.getType().glType, texture.getPixels(), sctxTexture, ktxData, this);
         this.textures.put(texture.getIndex(), image);
 
         return image;
     }
 
     public GLTexture createGLTexture(SctxTexture texture, int index) {
-        GLTexture image = GLImage.createWithFormat(texture.getWidth(), texture.getHeight(), true, ImageFilter.LINEAR, SctxPixelType.getFormat(texture.getPixelType()), SctxPixelType.getPixelType(texture.getPixelType()), null, texture, null,this);
+        GLTexture image = GLImage.createWithFormat(texture.getWidth(), texture.getHeight(), true, ImageFilter.LINEAR, SctxPixelType.getFormat(texture.getPixelType()), SctxPixelType.getPixelType(texture.getPixelType()), null, texture, null, this);
         this.textures.put(index, image);
 
         return image;
@@ -567,9 +582,10 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
     private VertexBuffer createDynamicVertexBuffer(Attribute... attributes) {
         return new GLVertexBuffer(this.gl, GLConstants.GL_DYNAMIC_DRAW, attributes);
     }
+
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        ;
+        initialized = false;
     }
 
     @Override
@@ -581,7 +597,7 @@ public class StageGLES implements GLSurfaceView.Renderer, Stage {
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         // Set the viewport
         GLES20.glViewport(0, 0, width, height);
-        if(!initialized) {
+        if (!initialized) {
 //            GLES2RendererContext rendererContext = new GLES2RendererContext();
             GLES3RendererContext rendererContext = new GLES3RendererContext();
 

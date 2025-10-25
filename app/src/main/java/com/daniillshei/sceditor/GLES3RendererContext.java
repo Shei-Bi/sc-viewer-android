@@ -1,9 +1,7 @@
 package com.daniillshei.sceditor;
 
 import android.opengl.GLES30;
-import android.opengl.GLES32;
 
-import java.lang.reflect.Method;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -32,7 +30,7 @@ public class GLES3RendererContext implements GLRendererContext {
 
     @Override
     public void glDeleteVertexArray(int id) {
-        GLES30.glDeleteVertexArrays(1,new int[]{id},0);
+        GLES30.glDeleteVertexArrays(1, new int[]{id}, 0);
     }
 
     @Override
@@ -187,7 +185,7 @@ public class GLES3RendererContext implements GLRendererContext {
     @Override
     public int getBoundFramebuffer(int target) {
         int[] fbo = new int[1];
-        GLES30.glGetIntegerv(GLES30.GL_FRAMEBUFFER_BINDING,fbo,0);
+        GLES30.glGetIntegerv(GLES30.GL_FRAMEBUFFER_BINDING, fbo, 0);
         return fbo[0];
     }
 
